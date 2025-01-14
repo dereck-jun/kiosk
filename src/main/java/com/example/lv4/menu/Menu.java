@@ -15,4 +15,8 @@ public class Menu {
         MenuItem menuItem = menuItems.get(selectedItem - 1);
         System.out.println("선택한 메뉴: " + menuItem.menuName.trim() + " | W " + menuItem.price + " | " + menuItem.description);
     }
+
+    public String getCategory() {
+        return category;
+    }
 }

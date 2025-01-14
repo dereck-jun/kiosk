@@ -37,7 +37,7 @@ public class Kiosk {
         System.out.println("[ MAIN MENU ]");
 
         for (int i = 0; i < menus.size(); i++) {
-            System.out.println((i + 1) + ". " + menus.get(i).category);
+            System.out.println((i + 1) + ". " + menus.get(i).getCategory());
         }
 
         System.out.println("0. 종료");
