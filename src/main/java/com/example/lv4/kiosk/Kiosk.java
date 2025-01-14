@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Kiosk {
-    private final List<Menu> menus;
+    public List<Menu> menus;
 
     public Kiosk(List<Menu> menus) {
         this.menus = menus;
@@ -37,7 +37,7 @@ public class Kiosk {
         System.out.println("[ MAIN MENU ]");
 
         for (int i = 0; i < menus.size(); i++) {
-            System.out.println((i + 1) + ". " + menus.get(i).getCategory());
+            System.out.println((i + 1) + ". " + menus.get(i).category);
         }
 
         System.out.println("0. 종료");
@@ -77,9 +77,9 @@ public class Kiosk {
     }
 
     private static void printMenuItems(Menu menu) {
-        System.out.println("[ " + menu.getCategory().toUpperCase() +" MENU ]");
-        for (int i = 0; i < menu.getMenuItems().size(); i++) {
-            System.out.println((i + 1) + ". " + menu.getMenuItems().get(i));
+        System.out.println("[ " + menu.category.toUpperCase() +" MENU ]");
+        for (int i = 0; i < menu.menuItems.size(); i++) {
+            System.out.println((i + 1) + ". " + menu.menuItems.get(i));
         }
         System.out.println("0. 뒤로가기");
     }
