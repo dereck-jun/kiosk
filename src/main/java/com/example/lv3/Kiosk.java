@@ -1,5 +1,6 @@
 package com.example.lv3;
 
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -14,29 +15,38 @@ public class Kiosk {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            printAllMenu();
-            int selectNum = scanner.nextInt();
+            printMainMenu();
+            int selectNum;
+            try {
+                selectNum = scanner.nextInt();
+            } catch (InputMismatchException ime) {
+                scanner.nextLine();
+                System.out.println("숫자만 입력할 수 있습니다.");
+                continue;
+            }
 
             if (selectNum == 0) {
                 break;
-            } else if (selectNum < 0) {
-                throw new IllegalArgumentException("잘못된 선택입니다.");
+            } else if (selectNum < 0 || selectNum > menuItems.size()) {
+                System.out.println("메뉴에 있는 숫자를 입력해주세요.");
+                continue;
             }
             printSelectedMenu(selectNum);
         }
         System.out.println("프로그램을 종료합니다.");
     }
 
-    private void printAllMenu() {
+    private void printMainMenu() {
         System.out.println("[ SHAKESHACK MENU ]");
         for (int i = 0; i < menuItems.size(); i++) {
-            System.out.println((i + 1) + ". " + menuItems.get(i).getBurgerName() + " | W " + menuItems.get(i).getPrice() + " | " + menuItems.get(i).getDescription());
+            MenuItem menuItem = menuItems.get(i);
+            System.out.println((i + 1) + ". " + menuItem.getBurgerName() + " | W " + menuItem.getPrice() + " | " + menuItem.getDescription());
         }
         System.out.println("0. 종료");
     }
 
     private void printSelectedMenu(int selectNum) {
-        System.out.println("선택한 메뉴: " + menuItems.get(selectNum - 1).getBurgerName() + ", "
-            + menuItems.get(selectNum - 1).getPrice() + ", " + menuItems.get(selectNum - 1).getDescription());
+        MenuItem menuItem = menuItems.get(selectNum - 1);
+        System.out.println("선택한 메뉴: " + menuItem.getBurgerName() + ", " + menuItem.getPrice() + ", " + menuItem.getDescription());
     }
 }
