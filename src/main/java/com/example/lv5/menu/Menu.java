@@ -11,8 +11,13 @@ public class Menu {
         this.category = category;
     }
 
-    public void addMenuItem(MenuItem menuItem) {
-        menuItems.add(menuItem);
+    public void printSelectedItem(int selectedItem) {
+        MenuItem menuItem = menuItems.get(selectedItem - 1);
+        System.out.println("선택한 메뉴: " + menuItem.getMenuName().trim() + " | W " + menuItem.getPrice() + " | " + menuItem.getDescription());
+    }
+
+    public void addMenuItems(MenuItem... menuItem) {
+        menuItems.addAll(List.of(menuItem));
     }
 
     public String getCategory() {
@@ -21,9 +26,5 @@ public class Menu {
 
     public List<MenuItem> getMenuItems() {
         return menuItems;
-    }
-
-    public void printSelectedItem(int selectedItem) {
-        System.out.println("선택한 메뉴: " + menuItems.get(selectedItem - 1));
     }
 }

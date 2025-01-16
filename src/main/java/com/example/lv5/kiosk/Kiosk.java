@@ -2,6 +2,7 @@ package com.example.lv5.kiosk;
 
 import com.example.lv5.menu.Menu;
 
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -17,20 +18,47 @@ public class Kiosk {
 
         while (true) {
             printMainMenu();
-            int selectMenu = scanner.nextInt();
-
-            if (inputValidation(selectMenu)) {
-                break;
+            int selectNum;
+            try {
+                selectNum = scanner.nextInt();
+            } catch (Exception e) {
+                scanner.nextLine();
+                System.out.println("숫자만 입력할 수 있습니다.");
+                continue;
             }
 
-            switch (selectMenu) {
-                case 1 -> handleBurgerSelection(scanner);
-                case 2 -> handleDrinkSelection(scanner);
-                case 3 -> handleDessertSelection(scanner);
-                default -> throw new IllegalArgumentException("잘못된 선택입니다.");
+            if (selectNum == 0) {
+                break;
+            } else if (selectNum >= 1 && selectNum <= menus.size()) {
+                handleMenuSelection(scanner, selectNum);
+            } else {
+                System.out.println("메뉴에 있는 번호를 입력해주세요.");
             }
         }
         System.out.println("프로그램을 종료합니다.");
+        scanner.close();
+    }
+
+    private void handleMenuSelection(Scanner scanner, int selectNum) {
+        Menu menu = menus.get(selectNum - 1);
+        printMenuItems(menu);
+
+        int selectMenu;
+        try {
+            selectMenu = scanner.nextInt();
+        } catch (InputMismatchException ime) {
+            scanner.nextLine();
+            System.out.println("숫자만 입력할 수 있습니다.");
+            return;
+        }
+
+        if (selectMenu != 0) {
+            if (selectMenu >= 1 && selectMenu <= menu.getMenuItems().size()) {
+                menu.printSelectedItem(selectMenu);
+            } else {
+                System.out.println("메뉴에 있는 번호를 입력해주세요.");
+            }
+        }
     }
 
     private void printMainMenu() {
@@ -43,53 +71,11 @@ public class Kiosk {
         System.out.println("0. 종료");
     }
 
-    private void handleBurgerSelection(Scanner scanner) {
-        Menu burgers = menus.get(0);
-        printMenuItems(burgers);
-        int selectedItem = scanner.nextInt();
-
-        if (inputValidation(selectedItem)) {
-            return;
-        }
-        burgers.printSelectedItem(selectedItem);
-    }
-
-    private void handleDrinkSelection(Scanner scanner) {
-        Menu drinks = menus.get(1);
-        printMenuItems(drinks);
-        int selectedItem = scanner.nextInt();
-
-        if (inputValidation(selectedItem)) {
-            return;
-        }
-        drinks.printSelectedItem(selectedItem);
-    }
-
-    private void handleDessertSelection(Scanner scanner) {
-        Menu desserts = menus.get(2);
-        printMenuItems(desserts);
-        int selectedItem = scanner.nextInt();
-
-        if (inputValidation(selectedItem)) {
-            return;
-        }
-        desserts.printSelectedItem(selectedItem);
-    }
-
-    private static void printMenuItems(Menu menu) {
+    private void printMenuItems(Menu menu) {
         System.out.println("[ " + menu.getCategory().toUpperCase() +" MENU ]");
         for (int i = 0; i < menu.getMenuItems().size(); i++) {
             System.out.println((i + 1) + ". " + menu.getMenuItems().get(i));
         }
         System.out.println("0. 뒤로가기");
-    }
-
-    private static boolean inputValidation(int selectMenu) {
-        if (selectMenu == 0) {
-            return true;
-        } else if (selectMenu < 0) {
-            throw new IllegalArgumentException("잘못된 선택입니다.");
-        }
-        return false;
     }
 }
