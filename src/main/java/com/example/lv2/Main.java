@@ -43,5 +43,6 @@ public class Main {
             System.out.println("선택한 메뉴: " + menuItem.getBurgerName() + ", " + menuItem.getPrice() + ", " + menuItem.getDescription());
         }
         System.out.println("프로그램을 종료합니다.");
+        scanner.close();
     }
 }
