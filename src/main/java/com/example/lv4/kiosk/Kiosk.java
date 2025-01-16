@@ -55,7 +55,7 @@ public class Kiosk {
 
         if (selectMenu != 0) {
             if (selectMenu >= 1 && selectMenu <= menu.menuItems.size()) {
-                menu.printSelectedItem(selectMenu - 1);
+                menu.printSelectedItem(selectMenu);
             } else {
                 System.out.println("메뉴에 있는 번호를 입력해주세요.");
             }
@@ -73,7 +73,7 @@ public class Kiosk {
     }
 
     private void printMenuItems(Menu menu) {
-        System.out.println("[ " + menu.category.toUpperCase() +" MENU ]");
+        System.out.println("[ " + menu.getCategory().toUpperCase() +" MENU ]");
         for (int i = 0; i < menu.menuItems.size(); i++) {
             System.out.println((i + 1) + ". " + menu.menuItems.get(i));
         }
