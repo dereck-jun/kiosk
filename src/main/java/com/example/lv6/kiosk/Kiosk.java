@@ -8,15 +8,19 @@ import com.example.lv6.payment.DiscountRate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
-import java.util.Optional;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 import static com.example.lv6.payment.DiscountRate.*;
+import static java.util.logging.Level.INFO;
 
 public class Kiosk {
     private final List<Menu> menus;
     private final List<ShoppingCart> carts = new ArrayList<>();
+    private final Logger logger = Logger.getLogger("kiosk");
 
     public Kiosk(List<Menu> menus) {
         this.menus = menus;
@@ -24,219 +28,126 @@ public class Kiosk {
 
     public void start() {
         Scanner scanner = new Scanner(System.in);
-        int selectNum;
         while (true) {
             printMainMenu();
+            int selectNum;
 
-            // 장바구니의 상태에 따라서 출력을 다르게 하기 위함
-            if (carts.isEmpty()) {
-                selectNum = scanner.nextInt();
-                if (selectNum != 0) {
-                    try {
-                        handleEmptyCart(scanner, selectNum);
-                    } catch (BaseException be) {
-                        System.out.println(be.getMessage());
+            try {
+                if (carts.isEmpty()) {
+                    selectNum = scanner.nextInt();
+                    if (selectNum == 0) {
+                        break;
+                    } else if (selectNum >= 1 && selectNum <= 3) {
+                        handleCartOperations(scanner, selectNum, true);
+                    } else {
+                        throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
                     }
                 } else {
-                    break;
-                }
-            } else {
-                printOrderOrCancel();
-                selectNum = scanner.nextInt();
-                if (selectNum != 0) {
-                    try {
-                        handleNonEmptyCart(scanner, selectNum);
-                    } catch (BaseException be) {
-                        System.out.println(be.getMessage());
+                    printOrderMenu();
+                    selectNum = scanner.nextInt();
+                    if (selectNum == 0) {
+                        break;
+                    } else if (selectNum >= 1 && selectNum <= 5) {
+                        handleCartOperations(scanner, selectNum, false);
+                    } else {
+                        throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
                     }
-                } else {
-                    break;
                 }
+            } catch (BaseException be) {
+                System.out.println(be.getMessage());
+            } catch (InputMismatchException ime) {
+                logger.log(INFO, "com.example.lv6.kiosk.Kiosk start: ", ime);
+                scanner.nextLine(); // 버퍼 정리
             }
         }
         System.out.println("프로그램이 종료되었습니다.");
         scanner.close();
     }
 
-    // 장바구니가 비었을 경우
-    private void handleEmptyCart(Scanner scanner, int selectNum) {
-        // TODO: 공통 case 문 합칠 수 있는지 생각
-        switch (selectNum) {
-            case 1 -> {
-                Menu burgers = menus.get(0);
 
-                printMenuInCategory(burgers);
-                int selectMenu = scanner.nextInt();
-
-                if (selectMenu == 0) {
-                    return;
-                } else if (selectMenu > burgers.getMenuItems().size()) {
-                    throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
-                }
-
-                // TODO: 아래 코드에서 IndexOutOfBoundsException 발생하니까 핸들링 해야 함
-                burgers.printSelectedItem(selectMenu);
-
-                System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
-                System.out.println("1. 확인              2. 취소");
-                int confirmOrNot = scanner.nextInt();
-
-                if (confirm(confirmOrNot) && confirmOrNot == 1) {
-                    addToCart(burgers, selectMenu);
-                }
-            }
-            case 2 -> {
-                Menu drinks = menus.get(1);
-
-                printMenuInCategory(drinks);
-                int selectMenu = scanner.nextInt();
-
-                if (selectMenu == 0) {
-                    return;
-                } else if (selectMenu > drinks.getMenuItems().size()) {
-                    throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
-                }
-
-                drinks.printSelectedItem(selectMenu);
-
-                System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
-                System.out.println("1. 확인              2. 취소");
-                int confirmOrNot = scanner.nextInt();
-
-                if (confirm(confirmOrNot) && confirmOrNot == 1) {
-                    addToCart(drinks, selectMenu);
-                }
-            }
-            case 3 -> {
-                Menu desserts = menus.get(2);
-
-                printMenuInCategory(desserts);
-                int selectMenu = scanner.nextInt();
-
-                if (selectMenu == 0) {
-                    return;
-                } else if (selectMenu > desserts.getMenuItems().size()) {
-                    throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
-                }
-
-                desserts.printSelectedItem(selectMenu);
-
-                System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
-                System.out.println("1. 확인              2. 취소");
-                int confirmOrNot = scanner.nextInt();
-
-                if (confirm(confirmOrNot) && confirmOrNot == 1) {
-                    addToCart(desserts, selectMenu);
-                }
-            }
-            default -> throw new BaseException("메뉴에 있는 번호를 입력해주세요");
+    /* 입력값 핸들링 관련 */
+    private void handleCartOperations(Scanner scanner, int selectNum, boolean isCartEmpty) {
+        if (selectNum >= 1 && selectNum <= menus.size()) {
+            handleMenuSelection(scanner, menus.get(selectNum - 1));
+        } else if (!isCartEmpty && (selectNum == 4 || selectNum == 5)) {
+            handleOrderOrCancel(scanner, selectNum);
+        } else {
+            throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
         }
     }
 
-    // 장바구니에 품목이 1개 이상일 경우
-    private void handleNonEmptyCart(Scanner scanner, int selectNum) {
-        switch (selectNum) {
-            case 1 -> {
-                Menu burgers = menus.get(0);
+    private void handleMenuSelection(Scanner scanner, Menu menu) {
+        printMenuInCategory(menu);
+        int selectMenu;
+        try {
+            selectMenu = scanner.nextInt();
+        } catch (InputMismatchException ime) {
+            logger.log(INFO, "com.example.lv6.kiosk.Kiosk handleMenuSelection: ", ime);
+            scanner.nextLine();
+            throw new BaseException("숫자만 입력할 수 있습니다.");
+        }
 
-                printMenuInCategory(burgers);
-                int selectMenu = scanner.nextInt();
+        if (selectMenu == 0) return;
 
-                if (selectMenu == 0) {
-                    return;
-                } else if (selectMenu > burgers.getMenuItems().size()) {
-                    throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
-                }
+        if (selectMenu > menu.getMenuItems().size()) {
+            throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
+        }
 
-                burgers.printSelectedItem(selectMenu);
+        menu.printSelectedItem(selectMenu);
 
-                System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
-                System.out.println("1. 확인              2. 취소");
-                int confirmOrNot = scanner.nextInt();
+        System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
+        System.out.println("1. 확인              2. 취소");
 
-                if (confirm(confirmOrNot) && confirmOrNot == 1) {
-                    addToCart(burgers, selectMenu);
-                }
-            }
-            case 2 -> {
-                Menu drinks = menus.get(1);
+        int confirmOrNot;
+        try {
+            confirmOrNot = scanner.nextInt();
+        } catch (InputMismatchException ime) {
+            logger.log(INFO, "com.example.lv6.kiosk.Kiosk handleMenuSelection: ", ime);
+            scanner.nextLine();
+            throw new BaseException("숫자만 입력할 수 있습니다.");
+        }
 
-                printMenuInCategory(drinks);
-                int selectMenu = scanner.nextInt();
-
-                if (selectMenu == 0) {
-                    return;
-                } else if (selectMenu > drinks.getMenuItems().size()) {
-                    throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
-                }
-
-                drinks.printSelectedItem(selectMenu);
-
-                System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
-                System.out.println("1. 확인              2. 취소");
-                int confirmOrNot = scanner.nextInt();
-
-                if (confirm(confirmOrNot) && confirmOrNot == 1) {
-                    addToCart(drinks, selectMenu);
-                }
-            }
-            case 3 -> {
-                Menu desserts = menus.get(2);
-
-                printMenuInCategory(desserts);
-                int selectMenu = scanner.nextInt();
-
-                if (selectMenu == 0) {
-                    return;
-                } else if (selectMenu > desserts.getMenuItems().size()) {
-                    throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
-                }
-
-                desserts.printSelectedItem(selectMenu);
-
-                System.out.println("위 메뉴를 장바구니에 추가하시겠습니까?");
-                System.out.println("1. 확인              2. 취소");
-                int confirmOrNot = scanner.nextInt();
-
-                if (confirm(confirmOrNot) && confirmOrNot == 1) {
-                    addToCart(desserts, selectMenu);
-                }
-            }
-            case 4 -> {
-                printOrdersAndPrice();
-                int selectOrder = scanner.nextInt();
-
-                if (confirm(selectOrder) && selectOrder == 1) {
-                    int discountIndex = getDiscountInfo(scanner);
-                    payOrGoBack(discountIndex);
-                }
-            }
-            case 5 -> {
-                // TODO: 이 위치에 저장된 장바구니 목록을 불러와야 할 것 같음
-                System.out.println("삭제할 메뉴의 번호를 입력해주세요. (0 입력 시 뒤로가기)");
-                int selectRemoveItem = scanner.nextInt();
-
-                if (selectRemoveItem == 0) {
-                    return;
-                } else if (selectRemoveItem > carts.size()) {
-                    throw new BaseException("카트에 담긴 수보다 더 큰 수를 입력할 수 없습니다.");
-                }
-                
-                removeItem(selectRemoveItem);
-            }
-            default -> throw new BaseException("메뉴에 있는 번호를 입력해주세요.");
+        if (confirm(confirmOrNot) && confirmOrNot == 1) {
+            addToCart(menu, selectMenu);
         }
     }
 
-    // 할인 정보 가져오기
-    private static int getDiscountInfo(Scanner scanner) {
-        System.out.println("할인 정보를 입력해주세요.");
-        for (DiscountRate value : values()) {
-            System.out.println(value.getIndex() + ". " + value.getType() + " : " + value.getPercentage());
+    private void handleOrderOrCancel(Scanner scanner, int selectNum) {
+        if (selectNum == 4) {
+            printOrdersAndPrice();
+
+            int confirmOrder;
+            try {
+                confirmOrder = scanner.nextInt();
+            } catch (InputMismatchException ime) {
+                logger.log(INFO, "com.example.lv6.kiosk.Kiosk handleOrderOrCancel: ", ime);
+                scanner.nextLine();
+                throw new BaseException("숫자만 입력할 수 있습니다.");
+            }
+
+            if (confirm(confirmOrder)) {
+                payOrGoBack(getDiscountInfo(scanner));
+            }
+        } else if (selectNum == 5) {
+            printItemsInCart();
+
+            System.out.println("삭제할 메뉴의 번호를 입력해주세요. (0 입력 시 뒤로가기)");
+            int removeItemIndex;
+            try {
+                removeItemIndex = scanner.nextInt();
+            } catch (InputMismatchException ime) {
+                logger.log(INFO, "com.example.lv6.kiosk.Kiosk handleOrderOrCancel: ", ime);
+                scanner.nextLine();
+                throw new BaseException("숫자만 입력할 수 있습니다.");
+            }
+
+            if (removeItemIndex != 0) {
+                removeItemFromCartByIndex(removeItemIndex);
+            }
         }
-        return scanner.nextInt();
     }
 
+    /* 단순 출력 관련  */
     private void printMainMenu() {
         System.out.println("[ MAIN MENU ]");
         for (int i = 0; i < menus.size(); i++) {
@@ -245,71 +156,25 @@ public class Kiosk {
         System.out.println("0. 종료");
     }
 
-    private void printOrderOrCancel() {
+    private void printOrderMenu() {
         System.out.println();
         System.out.println("[ ORDER MENU ]");
         System.out.println("4. Orders");
         System.out.println("5. Cancel");
     }
 
-    // 주문 지불 또는 뒤로가기
-    private void payOrGoBack(int discountIndex) {
-        double result = 0;
-        try {
-            result = getDiscountedTotalPrice(discountIndex);
-            System.out.println("주문이 완료되었습니다. 금액은 W " + result + " 입니다.");
-            carts.clear();
-        } catch (BaseException be) {
-            System.out.println(be.getMessage());
-        }
-    }
-
-    // 주문 제거
-    private void removeItem(int selectRemoveItem) {
-        ShoppingCart savedItem = carts.get(selectRemoveItem - 1);
-        if (savedItem.getAmount() > 0) {
-            removeItemInCart(savedItem.getMenuItem().getMenuName());
-        }
-        carts.removeIf(item -> item.getAmount() == 0);
-    }
-
-    // 특정 카테고리 내의 메뉴 출력
     private void printMenuInCategory(Menu menu) {
         System.out.println("[ " + menu.getCategory().toUpperCase() + " MENU ]");
         menu.printMenuItems();
         System.out.println("0. 뒤로가기");
     }
 
-    // 장바구니 담기
-    private void addToCart(Menu menu, int selectMenu) {
-        MenuItem selectedItem = menu.getMenuItem(selectMenu - 1);
-        if (carts.isEmpty()) {
-            carts.add(new ShoppingCart(selectedItem, 1));
-        } else {
-            Optional<ShoppingCart> optionalItem = carts.stream()
-                .filter(item ->
-                    item.getMenuItem().getMenuName().equalsIgnoreCase(selectedItem.getMenuName()))
-                .findFirst();
-
-            if (optionalItem.isPresent()) {
-                optionalItem.get().increaseAmount();
-            } else {
-                carts.add(new ShoppingCart(selectedItem, 1));
-            }
-        }
-        System.out.println(selectedItem.getMenuName().trim() + "이 장바구니에 추가되었습니다.");
-    }
-
-    // 장바구니 내 품목 & 총 가격 출력
     private void printOrdersAndPrice() {
         System.out.println("아래와 같이 주문하시겠습니까?");
         System.out.println();
 
         System.out.println("[ Orders ]");
-        for (ShoppingCart cart : carts) {
-            MenuItem menuItem = cart.getMenuItem();
-            System.out.println(menuItem.getMenuName().trim() + " | W " + menuItem.getPrice() + " | " + menuItem.getDescription() + " | " + cart.getAmount() + "개");
-        }
+        printItemsInCart();
         System.out.println();
 
         System.out.println("[ Total ]");
@@ -323,7 +188,74 @@ public class Kiosk {
         System.out.println("1. 주문               2. 메뉴판");
     }
 
-    // 할인율 계산 결과 가져오기
+    private void printItemsInCart() {
+        AtomicInteger idx = new AtomicInteger(1);
+        for (ShoppingCart cart : carts) {
+            MenuItem menuItem = cart.getMenuItem();
+            System.out.println("[" + idx.getAndIncrement() + "] " + menuItem.getMenuName().trim() + " | W "
+                + menuItem.getPrice() + " | " + menuItem.getDescription() + " | " + cart.getQuantity() + "개");
+        }
+    }
+
+    /* 장바구니 추가 관련 */
+    private void addToCart(Menu menu, int selectMenu) {
+        MenuItem selectedItem = menu.getMenuItem(selectMenu - 1);
+
+        carts.stream()
+            .filter(cart ->
+                cart.getMenuItem().getMenuName()
+                    .equalsIgnoreCase(selectedItem.getMenuName()))
+            .findFirst()
+            .ifPresentOrElse(ShoppingCart::increaseAmount,
+                () -> carts.add(new ShoppingCart(selectedItem, 1)));
+
+        System.out.println(selectedItem.getMenuName().trim() + "이 장바구니에 추가되었습니다.");
+    }
+
+    /* 장바구니 제거 관련 */
+    private void removeItemFromCartByIndex(int selectRemoveItem) {
+        ShoppingCart savedItem;
+        try {
+            savedItem = carts.get(selectRemoveItem - 1);
+        } catch (IndexOutOfBoundsException ioobe) {
+            logger.log(INFO, "com.example.lv6.kiosk.Kiosk removeItemFromCartByIndex: ", ioobe);
+            throw new BaseException("장바구니에 저장된 개수보다 큰 값을 입력할 수 없습니다.");
+        }
+        if (savedItem.getQuantity() > 0) {
+            decreaseItemQuantity(savedItem.getMenuItem().getMenuName());
+        }
+        carts.removeIf(item -> item.getQuantity() == 0);
+    }
+
+    private void decreaseItemQuantity(String menuName) {
+        carts.stream()
+            .filter(item -> item.getMenuItem().getMenuName().equalsIgnoreCase(menuName))
+            .forEach(ShoppingCart::decreaseAmount);
+    }
+
+    /* 결제 관련 */
+    private void payOrGoBack(int discountIndex) {
+        System.out.println("주문이 완료되었습니다. 금액은 W " + getDiscountedTotalPrice(discountIndex) + " 입니다.");
+        carts.clear();
+    }
+
+    private int getDiscountInfo(Scanner scanner) {
+        System.out.println("할인 정보를 입력해주세요.");
+        for (DiscountRate value : values()) {
+            System.out.println(value.getIndex() + ". " + value.getType() + " : " + value.getPercentage());
+        }
+
+        int discountIndex;
+        try {
+            discountIndex = scanner.nextInt();
+        } catch (InputMismatchException ime) {
+            logger.log(INFO, "com.example.lv6.kiosk.Kiosk getDiscountInfo: ", ime);
+            scanner.nextLine();
+            throw new BaseException("숫자만 입력할 수 있습니다.");
+        }
+        return discountIndex;
+    }
+
     private double getDiscountedTotalPrice(int discountIndex) {
         BigDecimal result;
         switch (discountIndex) {
@@ -336,23 +268,11 @@ public class Kiosk {
         return result.doubleValue();
     }
 
-    // 장바구니 내 품목 제거 메서드
-    private void removeItemInCart(String menuName) {
-        carts.stream()
-            .filter(item -> item.getMenuItem().getMenuName().equalsIgnoreCase(menuName))
-            .forEach(ShoppingCart::decreaseAmount);
-    }
-
-    // 확인 및 취소에 대한 값 체크
+    /* 입력 값 확인 관련 */
     private boolean confirm(int inputNumber) {
-        try {
-            if (inputNumber != 1 && inputNumber != 2) {
-                throw new BaseException("메뉴에 있는 번호를 입력해주세요");
-            }
-        } catch (BaseException be) {
-            System.out.println(be.getMessage());
-            return false;
+        if (inputNumber != 1 && inputNumber != 2) {
+            throw new BaseException("메뉴에 있는 번호를 입력해주세요");
         }
-        return true;
+        return inputNumber == 1;
     }
 }
