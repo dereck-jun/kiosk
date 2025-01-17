@@ -1,7 +1,5 @@
 package com.example.lv6.menu;
 
-import com.example.lv6.exception.BaseException;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,8 +20,8 @@ public class Menu {
         menuItems.addAll(List.of(menuItemList));
     }
 
-    public MenuItem getMenuItem(int selectedNum) {
-        return menuItems.get(selectedNum);
+    public MenuItem getMenuItemByIndex(int selectedNum) {
+        return menuItems.get(selectedNum - 1);
     }
 
     public void printMenuItems() {
