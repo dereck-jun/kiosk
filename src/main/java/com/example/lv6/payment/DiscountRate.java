@@ -29,7 +29,7 @@ public enum DiscountRate {
         for (ShoppingCart cart : carts) {
             sum = sum.add(cart.getTotalPrice());
         }
-        return sum.multiply(new BigDecimal(String.valueOf(discountRate.rate)));
+        return sum.multiply(new BigDecimal(Double.toString(discountRate.rate)));
     }
 
     public int getIndex() {

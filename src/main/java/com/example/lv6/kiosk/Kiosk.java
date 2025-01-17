@@ -199,7 +199,7 @@ public class Kiosk {
 
     /* 장바구니 추가 관련 */
     private void addToCart(Menu menu, int selectMenu) {
-        MenuItem selectedItem = menu.getMenuItem(selectMenu - 1);
+        MenuItem selectedItem = menu.getMenuItemByIndex(selectMenu);
 
         carts.stream()
             .filter(cart ->
