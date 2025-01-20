@@ -30,7 +30,9 @@ public class Kiosk {
 
             if (selectNum == 0) {
                 break;
-            } else if (selectNum >= 1 && selectNum <= menus.size()) {
+            }
+
+            if (selectNum > 0 && selectNum <= menus.size()) {
                 handleMenuSelection(scanner, selectNum);
             } else {
                 System.out.println("메뉴에 있는 번호를 입력해주세요.");
@@ -53,12 +55,14 @@ public class Kiosk {
             return;
         }
 
-        if (selectMenu != 0) {
-            if (selectMenu >= 1 && selectMenu <= menu.menuItems.size()) {
-                menu.printSelectedItem(selectMenu);
-            } else {
-                System.out.println("메뉴에 있는 번호를 입력해주세요.");
-            }
+        if (selectMenu == 0) {
+            return;
+        }
+
+        if (selectMenu > 0 && selectMenu <= menu.menuItems.size()) {
+            menu.printSelectedItem(selectMenu);
+        } else {
+            System.out.println("메뉴에 있는 번호를 입력해주세요.");
         }
     }
 
