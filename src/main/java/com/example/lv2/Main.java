@@ -35,12 +35,14 @@ public class Main {
 
             if (selectNum == 0) {
                 break;
-            } else if (selectNum < 0) {
-                System.out.println("메뉴에 있는 숫자를 입력해주세요.");
             }
 
-            MenuItem menuItem = menuItemList.get(selectNum - 1);
-            System.out.println("선택한 메뉴: " + menuItem.getBurgerName() + ", " + menuItem.getPrice() + ", " + menuItem.getDescription());
+            if (selectNum > 0 && selectNum <= menuItemList.size()) {
+                MenuItem menuItem = menuItemList.get(selectNum - 1);
+                System.out.println("선택한 메뉴: " + menuItem.getBurgerName() + ", " + menuItem.getPrice() + ", " + menuItem.getDescription());
+            } else {
+                System.out.println("메뉴에 있는 숫자를 입력해주세요.");
+            }
         }
         System.out.println("프로그램을 종료합니다.");
         scanner.close();
