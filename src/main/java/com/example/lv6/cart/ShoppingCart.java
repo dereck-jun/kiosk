@@ -35,7 +35,7 @@ public class ShoppingCart {
 
     public BigDecimal getTotalPrice() {
         // 정확한 연산을 위해 double -> String -> BigDecimal 변환 후 계산
-        BigDecimal menuItemPrice = new BigDecimal(String.valueOf(menuItem.getPrice()));
+        BigDecimal menuItemPrice = new BigDecimal(Double.toString(menuItem.getPrice()));
         return menuItemPrice.multiply(BigDecimal.valueOf(quantity));
     }
 }
